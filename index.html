@@ -55,7 +55,7 @@
 <body>
 <div class="wrap">
   <h1>Wild Egocentric Industry Filter</h1>
-  <p class="muted">5000-episode stratified sample · 50 sceneCategories × 100 · Built 2026-07-04 03:00 UTC</p>
+  <p class="muted">5000-episode stratified sample · 50 sceneCategories × 100 · Built 2026-07-04 03:02 UTC</p>
 
   <div class="cards">
     <div class="card"><div class="val">0.83</div><div class="lbl">Throughput (ep/s)</div></div>
@@ -72,8 +72,8 @@
   → industry_scenes.yaml lookup?
        YES → isIndustry = 1 (skip model)
        NO  → sample ≤32 frames → vision-language model
-            score &lt; 0.35 → 0
-            score &gt; 0.65 → 1
+            score &lt; 0.1 → 0
+            score &gt; 0.5 → 1
             else → 2 (pending review)
 
   <em>This report: model-only eval (lookup skipped) across all sceneCategories.</em></div>
@@ -81,7 +81,7 @@
   <h2>Interactive score chart</h2>
   <p class="muted">Drag vertical lines to adjust grey zone. Click <strong>I/N</strong> to toggle industry / non-industry. Click a dot to select episode &amp; open preview. Click category name to highlight.</p>
   <div class="controls">
-    <span class="th-badge" id="thDisplay">Grey zone: 0.35 – 0.65</span>
+    <span class="th-badge" id="thDisplay">Grey zone: 0.1 – 0.5</span>
     <label><input type="radio" name="filt" value="all" checked/> All</label>
     <label><input type="radio" name="filt" value="grey"/> <span id="greyFiltLabel">Grey only</span></label>
     <label><input type="radio" name="filt" value="notable"/> Non-table scenes only</label>
@@ -121,7 +121,7 @@ const CH = REPORT.chart;
 const IND = '#d62728', NON = '#1f77b4';
 const HAWKEYE_BASE = 'https://hawkeye.maxinsights.ai/';
 const SAMPLE_IDS = new Set(CH.points.map(p => p.id));
-let thLow = 0.35, thHigh = 0.65;
+let thLow = 0.1, thHigh = 0.5;
 const TH_MIN_GAP = 0.02;
 let sceneIndustry = CH.sceneIndustry.slice();
 let filt = 'all', hlScene = '';
