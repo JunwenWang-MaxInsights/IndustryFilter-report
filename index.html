@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>SigLIP B/16 — 5000 Episode Evaluation</title>
+<title>5000 Episode Industry Filter Evaluation</title>
 <style>
   :root { --ind: #d62728; --non: #1f77b4; --bg: #f6f7f9; --card: #fff; --text: #1a1a1a; --muted: #5c6370; }
   * { box-sizing: border-box; }
@@ -35,8 +35,8 @@
   #previewBtn:disabled { background: #b0bec5; cursor: not-allowed; }
   #previewBtn:not(:disabled):hover { background: #1548b8; }
   #previewUrl { display: block; margin-top: 8px; font-size: 0.72rem; color: var(--muted); word-break: break-all; line-height: 1.35; }
-  .ylabels { flex: 0 0 230px; padding-top: 28px; font-size: 11px; line-height: 22px; }
-  .ylabel { height: 22px; display: flex; align-items: center; gap: 5px; }
+  .ylabels { flex: 0 0 230px; position: relative; font-size: 11px; padding: 0; flex-shrink: 0; }
+  .ylabel { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 5px; transform: translateY(-50%); }
   .ylabel .lbl-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
   .ylabel.hl .lbl-text { background: #fff3cd; border-radius: 3px; }
   .ind-toggle { width: 20px; height: 15px; border: 1px solid #bbb; border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 700; padding: 0; flex-shrink: 0; color: #fff; }
@@ -49,44 +49,34 @@
   #tip, #toast { position: fixed; z-index: 1000; }
   #tip { display: none; pointer-events: none; background: rgba(20,20,20,.92); color: #fff; font: 12px/1.4 ui-monospace,monospace; padding: 8px 10px; border-radius: 6px; max-width: 420px; white-space: pre-wrap; }
   #toast { bottom: 20px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 10px 16px; border-radius: 8px; font: 13px ui-monospace,monospace; opacity: 0; transition: opacity .2s; pointer-events: none; }
-  .static-img { max-width: 100%; border: 1px solid #e2e5ea; border-radius: 8px; }
   footer { margin-top: 40px; font-size: 0.82rem; color: var(--muted); }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>SigLIP B/16 — Wild Egocentric Industry Filter</h1>
-  <p class="muted">5000-episode stratified sample · 50 sceneCategories × 100 · Built 2026-07-04 01:16 UTC</p>
+  <h1>Wild Egocentric Industry Filter</h1>
+  <p class="muted">5000-episode stratified sample · 50 sceneCategories × 100 · Built 2026-07-04 01:27 UTC</p>
 
   <div class="cards">
-    <div class="card"><div class="val">5000</div><div class="lbl">Episodes</div></div>
-    <div class="card"><div class="val">3457</div><div class="lbl">Label 0 (&lt;0.35)</div></div>
-    <div class="card"><div class="val">634</div><div class="lbl">Label 1 (&gt;0.65)</div></div>
-    <div class="card"><div class="val">909</div><div class="lbl">Label 2 (grey)</div></div>
-    <div class="card"><div class="val">18.2%</div><div class="lbl">Grey zone rate</div></div>
-    <div class="card"><div class="val">52</div><div class="lbl">Non-table false label=1</div></div>
+    <div class="card"><div class="val">2.71</div><div class="lbl">Throughput (ep/s)</div></div>
+    <div class="card"><div class="val">0.37s</div><div class="lbl">Per episode</div></div>
+    <div class="card"><div class="val">30.7 min</div><div class="lbl">Total runtime</div></div>
+    <div class="card"><div class="val">4</div><div class="lbl">GPU workers</div></div>
+    <div class="card"><div class="val">5000</div><div class="lbl">Episodes scored</div></div>
+    <div class="card"><div class="val">≤32</div><div class="lbl">Frames / episode</div></div>
   </div>
-
-  <h2>Executive summary</h2>
-  <ul>
-    <li><strong>Model:</strong> google/siglip2-base-patch16-224 · thresholds 0.35 / 0.65 · median frame aggregation · max-over-prompts</li>
-    <li><strong>Eval mode:</strong> <code>siglip_only</code> — every episode scored by SigLIP (production uses scene lookup first).</li>
-    <li>Typical non-industrial scenes (home, retail, hospital) score low; SigLIP separates well.</li>
-    <li>~18.2% grey zone — ambiguous visuals (garment lines, 驿站, 加工手套) need rules or review.</li>
-    <li><strong>Production recommendation:</strong> industry scene table → SigLIP for unknown/grey; keep B/16 thresholds.</li>
-  </ul>
 
   <h2>Pipeline</h2>
   <div class="pipe">DynamoDB episode
   → read sceneCategory
   → industry_scenes.yaml lookup?
-       YES → isIndustry = 1 (skip SigLIP)
-       NO  → sample ≤32 frames → SigLIP B/16
+       YES → isIndustry = 1 (skip model)
+       NO  → sample ≤32 frames → vision-language model
             score &lt; 0.35 → 0
             score &gt; 0.65 → 1
             else → 2 (pending review)
 
-  <em>This report: siglip_only (lookup skipped) to measure SigLIP across all scenes.</em></div>
+  <em>This report: model-only eval (lookup skipped) across all sceneCategories.</em></div>
 
   <h2>Interactive score chart</h2>
   <p class="muted">Drag vertical lines to adjust grey zone. Click <strong>I/N</strong> to toggle industry / non-industry. Click a dot to select episode &amp; open preview. Click category name to highlight.</p>
@@ -117,10 +107,6 @@
     <span class="dot-non">● Non-industry category</span> &nbsp;
     <span class="mean-mark">| Mean</span>
   </p>
-
-  <h2>Static overview</h2>
-  <p class="muted">Pre-rendered matplotlib dot plot (same data).</p>
-  <img class="static-img" src="assets/siglip_b16_5000_dots.png" alt="Score by sceneCategory"/>
 
   <footer>
     <p>Source run: siglip_sample_20260703T161512Z.csv · Repo private; this page is public via GitHub Pages.</p>
@@ -410,9 +396,12 @@ function toggleSceneIndustry(i) {
 function renderYLabels() {
   const yl = document.getElementById('ylabels');
   yl.innerHTML = '';
+  yl.style.height = CH.plotH + 'px';
+  const g = chartGeom();
   CH.scenes.forEach((s, i) => {
     const row = document.createElement('div');
     row.className = 'ylabel' + (hlScene !== '' && +hlScene === i ? ' hl' : '');
+    row.style.top = g.yOf(i) + 'px';
 
     const btn = document.createElement('button');
     btn.type = 'button';
